@@ -248,3 +248,41 @@ function Install-PowerShellViaWinget {
 # Install-PowerShellViaWinget
 
 Export-ModuleMember -Function 'Install-PowerShellViaWinget'
+
+
+
+function Create-Shortcuts {
+    param (
+        [string]$SourceDirectory,
+        [string]$DestinationDirectory
+    )
+
+    $currentUsername = $env:USERNAME
+
+    # Check if source directory exists
+    if (-not (Test-Path -Path $SourceDirectory -PathType Container)) {
+        Write-Host "Source directory '$SourceDirectory' not found. Exiting."
+        return
+    }
+
+    # Check if the destination directory exists, if not, create it
+    if (-not (Test-Path -Path $DestinationDirectory -PathType Container)) {
+        New-Item -Path $DestinationDirectory -ItemType Directory -Force
+    }
+
+    # Get all directories in the source directory
+    $directories = Get-ChildItem -Path $SourceDirectory -Directory
+
+    # Loop through each directory and create a shortcut
+    foreach ($dir in $directories) {
+        $targetPath = $dir.FullName
+        $shortcutName = "$DestinationDirectory\$($dir.Name).lnk"
+        
+        $WshShell = New-Object -ComObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut($shortcutName)
+        $Shortcut.TargetPath = $targetPath
+        $Shortcut.Save()
+    }
+}
+
+Export-ModuleMember -Function 'Create-Shortcuts'
